@@ -149,7 +149,24 @@ export class LLMHelper {
           mimeType: "image/png"
         }
       };
-      const prompt = `${this.systemPrompt}\n\nDescribe the content of this image in a short, concise answer. In addition to your main answer, suggest several possible actions or responses the user could take next based on the image. Do not return a structured JSON object, just answer naturally as you would to a user. Be concise and brief.`;
+      
+      // Enhanced prompt for better coding problem analysis
+      const prompt = `You are an expert coding assistant. Analyze this image carefully.
+
+If this is a coding problem or programming question:
+1. First, identify what type of problem it is (algorithm, data structure, implementation, etc.)
+2. Provide a clear, working solution in the most appropriate programming language
+3. Keep explanations concise and focus on the code
+4. If multiple approaches exist, provide the most efficient one
+5. Format any code properly
+
+If this is NOT a coding problem:
+1. Describe what you see in the image
+2. Provide helpful context or suggestions
+3. Be concise and practical
+
+Respond naturally without JSON formatting. If it's a coding problem, prioritize showing the actual code solution.`;
+
       const result = await this.model.generateContent([prompt, imagePart]);
       const response = await result.response;
       const text = response.text();
@@ -162,7 +179,14 @@ export class LLMHelper {
 
   public async chatWithGemini(message: string): Promise<string> {
     try {
-      const result = await this.model.generateContent(message);
+      // Enhanced chat prompt for better responses
+      const enhancedPrompt = `You are a helpful AI assistant. Respond to the user's message in a clear, well-formatted way. 
+
+User message: ${message}
+
+Please provide a helpful, accurate response. Use markdown formatting where appropriate for better readability (bold, italic, bullet points, etc.), but keep it conversational and easy to understand.`;
+
+      const result = await this.model.generateContent(enhancedPrompt);
       const response = await result.response;
       return response.text();
     } catch (error) {
@@ -170,4 +194,4 @@ export class LLMHelper {
       throw error;
     }
   }
-} 
+}

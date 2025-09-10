@@ -14,6 +14,96 @@ interface QueueProps {
   setView: React.Dispatch<React.SetStateAction<"queue" | "solutions" | "debug">>
 }
 
+// Simple markdown parser for chat messages
+const parseMarkdown = (text: string): JSX.Element => {
+  // Split text by lines to handle line breaks properly
+  const lines = text.split('\n');
+  
+  return (
+    <div>
+      {lines.map((line, lineIndex) => {
+        if (line.trim() === '') {
+          return <br key={lineIndex} />;
+        }
+        
+        // Parse inline formatting within each line
+        const parseInlineFormatting = (text: string): (string | JSX.Element)[] => {
+          const parts: (string | JSX.Element)[] = [];
+          let currentIndex = 0;
+          let partKey = 0;
+          
+          // Handle bold text (**text**)
+          text = text.replace(/\*\*(.*?)\*\*/g, (match, content, offset) => {
+            const beforeText = text.slice(currentIndex, offset);
+            if (beforeText) parts.push(beforeText);
+            parts.push(<strong key={`bold-${partKey++}`}>{content}</strong>);
+            currentIndex = offset + match.length;
+            return ''; // Remove from original string
+          });
+          
+          // Handle italic text (*text*)
+          text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, (match, content, offset) => {
+            const beforeText = text.slice(currentIndex, offset);
+            if (beforeText) parts.push(beforeText);
+            parts.push(<em key={`italic-${partKey++}`}>{content}</em>);
+            currentIndex = offset + match.length;
+            return ''; // Remove from original string
+          });
+          
+          // Add any remaining text
+          const remainingText = text.slice(currentIndex);
+          if (remainingText) parts.push(remainingText);
+          
+          return parts.length > 0 ? parts : [text];
+        };
+        
+        // Handle bullet points
+        if (line.trim().startsWith('* ')) {
+          const bulletContent = line.trim().substring(2);
+          return (
+            <div key={lineIndex} className="flex items-start gap-2 my-1">
+              <span className="text-gray-400 mt-0.5">•</span>
+              <span>{parseInlineFormatting(bulletContent)}</span>
+            </div>
+          );
+        }
+        
+        // Handle headers
+        if (line.startsWith('# ')) {
+          return (
+            <h1 key={lineIndex} className="text-base font-bold my-2">
+              {parseInlineFormatting(line.substring(2))}
+            </h1>
+          );
+        }
+        
+        if (line.startsWith('## ')) {
+          return (
+            <h2 key={lineIndex} className="text-sm font-semibold my-2">
+              {parseInlineFormatting(line.substring(3))}
+            </h2>
+          );
+        }
+        
+        if (line.startsWith('### ')) {
+          return (
+            <h3 key={lineIndex} className="text-sm font-medium my-1">
+              {parseInlineFormatting(line.substring(4))}
+            </h3>
+          );
+        }
+        
+        // Regular paragraph
+        return (
+          <p key={lineIndex} className="my-1">
+            {parseInlineFormatting(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const Queue: React.FC<QueueProps> = ({ setView }) => {
   const [toastOpen, setToastOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<ToastMessage>({
@@ -146,7 +236,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
     }
   }, [isTooltipVisible, tooltipHeight])
 
-  // Seamless screenshot-to-LLM flow
+  // Seamless screenshot-to-LLM flow with improved prompting
   useEffect(() => {
     // Listen for screenshot taken event
     const unsubscribe = window.electronAPI.onScreenshotTaken(async (data) => {
@@ -158,7 +248,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
         // Get the latest screenshot path
         const latest = data?.path || (Array.isArray(data) && data.length > 0 && data[data.length - 1]?.path);
         if (latest) {
-          // Call the LLM to process the screenshot
+          // Call the LLM to process the screenshot with improved prompt for coding problems
           const response = await window.electronAPI.invoke("analyze-image-file", latest);
           setChatMessages((msgs) => [...msgs, { role: "gemini", text: response.text }]);
         }
@@ -181,7 +271,6 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
   const handleChatToggle = () => {
     setIsChatOpen(!isChatOpen)
   }
-
 
   return (
     <div
@@ -235,7 +324,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                       }`}
                       style={{ wordBreak: "break-word", lineHeight: "1.4" }}
                     >
-                      {msg.text}
+                      {msg.role === "gemini" ? parseMarkdown(msg.text) : msg.text}
                     </div>
                   </div>
                 ))
