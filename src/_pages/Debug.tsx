@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useQuery, useQueryClient } from "react-query"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { ComplexitySection, ContentSection } from "./Solutions"
 import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
 import {
@@ -102,38 +102,58 @@ const CodeComparisonSection = ({
 
   const { leftLines, rightLines } = computeDiff()
 
+  // Copy functionality for code sections
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code).then(() => {
+      // Success feedback could be added here
+    }).catch(err => {
+      console.error('Failed to copy code:', err);
+    });
+  };
+
   return (
     <div className="space-y-1.5">
-      <h2 className="text-[13px] font-medium text-white tracking-wide">
+      <h2 className="text-[13px] font-medium text-white/90 tracking-wide">
         Code Comparison
       </h2>
       {isLoading ? (
         <div className="space-y-1">
           <div className="mt-3 flex">
-            <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+            <p className="text-xs bg-gradient-to-r from-white/40 via-white/60 to-white/40 bg-clip-text text-transparent animate-pulse">
               Loading code comparison...
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex flex-row gap-0.5 bg-[#161b22] rounded-lg overflow-hidden">
+        <div className="flex flex-row gap-0.5 bg-black/40 backdrop-blur-md rounded-lg overflow-hidden border border-white/10">
           {/* Previous Code */}
-          <div className="w-1/2 border-r border-gray-700">
-            <div className="bg-[#2d333b] px-3 py-1.5">
-              <h3 className="text-[11px] font-medium text-gray-200">
+          <div className="w-1/2 border-r border-white/10">
+            <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 flex justify-between items-center">
+              <h3 className="text-[11px] font-medium text-white/80">
                 Previous Version
               </h3>
+              <button
+                onClick={() => copyToClipboard(leftLines.map(line => line.value).join('\n'))}
+                className="text-xs text-white/60 hover:text-white/90 transition-colors bg-white/10 hover:bg-white/20 px-2 py-1 rounded"
+                title="Copy previous code"
+              >
+                📋 Copy
+              </button>
             </div>
             <div className="p-3 overflow-x-auto">
               <SyntaxHighlighter
                 language="python"
-                style={dracula}
+                style={vscDarkPlus}
                 customStyle={{
                   maxWidth: "100%",
                   margin: 0,
                   padding: "1rem",
                   whiteSpace: "pre-wrap",
-                  wordBreak: "break-all"
+                  wordBreak: "break-all",
+                  background: "rgba(0, 0, 0, 0.6)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "8px"
                 }}
                 wrapLines={true}
                 showLineNumbers={true}
@@ -143,7 +163,7 @@ const CodeComparisonSection = ({
                     style: {
                       display: "block",
                       backgroundColor: line?.removed
-                        ? "rgba(139, 0, 0, 0.2)"
+                        ? "rgba(220, 38, 38, 0.2)"
                         : "transparent"
                     }
                   }
@@ -156,21 +176,32 @@ const CodeComparisonSection = ({
 
           {/* New Code */}
           <div className="w-1/2">
-            <div className="bg-[#2d333b] px-3 py-1.5">
-              <h3 className="text-[11px] font-medium text-gray-200">
+            <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 flex justify-between items-center">
+              <h3 className="text-[11px] font-medium text-white/80">
                 New Version
               </h3>
+              <button
+                onClick={() => copyToClipboard(rightLines.map(line => line.value).join('\n'))}
+                className="text-xs text-white/60 hover:text-white/90 transition-colors bg-white/10 hover:bg-white/20 px-2 py-1 rounded"
+                title="Copy new code"
+              >
+                📋 Copy
+              </button>
             </div>
             <div className="p-3 overflow-x-auto">
               <SyntaxHighlighter
                 language="python"
-                style={dracula}
+                style={vscDarkPlus}
                 customStyle={{
                   maxWidth: "100%",
                   margin: 0,
                   padding: "1rem",
                   whiteSpace: "pre-wrap",
-                  wordBreak: "break-all"
+                  wordBreak: "break-all",
+                  background: "rgba(0, 0, 0, 0.6)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "8px"
                 }}
                 wrapLines={true}
                 showLineNumbers={true}
@@ -180,7 +211,7 @@ const CodeComparisonSection = ({
                     style: {
                       display: "block",
                       backgroundColor: line?.added
-                        ? "rgba(0, 139, 0, 0.2)"
+                        ? "rgba(34, 197, 94, 0.2)"
                         : "transparent"
                     }
                   }
@@ -371,8 +402,8 @@ const Debug: React.FC<DebugProps> = ({ isProcessing, setIsProcessing }) => {
         onTooltipVisibilityChange={handleTooltipVisibilityChange}
       />
 
-      {/* Main Content */}
-      <div className="w-full text-sm text-black bg-black/60 rounded-md">
+      {/* Main Content - Updated with transparent black theme */}
+      <div className="w-full text-sm text-white/90 main-content-bg rounded-md">
         <div className="rounded-lg overflow-hidden">
           <div className="px-4 py-3 space-y-4">
             {/* Thoughts Section */}
@@ -385,7 +416,7 @@ const Debug: React.FC<DebugProps> = ({ isProcessing, setIsProcessing }) => {
                       {thoughtsData.map((thought, index) => (
                         <div key={index} className="flex items-start gap-2">
                           <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-                          <div>{thought}</div>
+                          <div className="text-white/80">{thought}</div>
                         </div>
                       ))}
                     </div>

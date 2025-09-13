@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useQuery, useQueryClient } from "react-query"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 import ScreenshotQueue from "../components/Queue/ScreenshotQueue"
 import {
@@ -29,22 +29,23 @@ export const ContentSection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+    <h2 className="text-[13px] font-medium text-white/90 tracking-wide">
       {title}
     </h2>
     {isLoading ? (
       <div className="mt-4 flex">
-        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+        <p className="text-xs bg-gradient-to-r from-white/40 via-white/60 to-white/40 bg-clip-text text-transparent animate-pulse">
           Extracting problem statement...
         </p>
       </div>
     ) : (
-      <div className="text-[13px] leading-[1.4] text-gray-100 max-w-[600px]">
+      <div className="text-[13px] leading-[1.4] text-white/80 max-w-[600px]">
         {content}
       </div>
     )}
   </div>
 )
+
 const SolutionSection = ({
   title,
   content,
@@ -55,13 +56,13 @@ const SolutionSection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+    <h2 className="text-[13px] font-medium text-white/90 tracking-wide">
       {title}
     </h2>
     {isLoading ? (
       <div className="space-y-1.5">
         <div className="mt-4 flex">
-          <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+          <p className="text-xs bg-gradient-to-r from-white/40 via-white/60 to-white/40 bg-clip-text text-transparent animate-pulse">
             Loading solutions...
           </p>
         </div>
@@ -71,13 +72,17 @@ const SolutionSection = ({
         <SyntaxHighlighter
           showLineNumbers
           language="python"
-          style={dracula}
+          style={vscDarkPlus}
           customStyle={{
             maxWidth: "100%",
             margin: 0,
             padding: "1rem",
             whiteSpace: "pre-wrap",
-            wordBreak: "break-all"
+            wordBreak: "break-all",
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "8px"
           }}
           wrapLongLines={true}
         >
@@ -98,25 +103,25 @@ export const ComplexitySection = ({
   isLoading: boolean
 }) => (
   <div className="space-y-2">
-    <h2 className="text-[13px] font-medium text-white tracking-wide">
+    <h2 className="text-[13px] font-medium text-white/90 tracking-wide">
       Complexity (Updated)
     </h2>
     {isLoading ? (
-      <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+      <p className="text-xs bg-gradient-to-r from-white/40 via-white/60 to-white/40 bg-clip-text text-transparent animate-pulse">
         Calculating complexity...
       </p>
     ) : (
       <div className="space-y-1">
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
+        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-white/80">
           <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
           <div>
-            <strong>Time:</strong> {timeComplexity}
+            <strong className="text-white/90">Time:</strong> {timeComplexity}
           </div>
         </div>
-        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-gray-100">
+        <div className="flex items-start gap-2 text-[13px] leading-[1.4] text-white/80">
           <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
           <div>
-            <strong>Space:</strong> {spaceComplexity}
+            <strong className="text-white/90">Space:</strong> {spaceComplexity}
           </div>
         </div>
       </div>
@@ -485,8 +490,8 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
             onTooltipVisibilityChange={handleTooltipVisibilityChange}
           />
 
-          {/* Main Content - Modified width constraints */}
-          <div className="w-full text-sm text-black bg-black/60 rounded-md">
+          {/* Main Content - Modified width constraints with transparent black theme */}
+          <div className="w-full text-sm text-white main-content-bg rounded-md">
             <div className="rounded-lg overflow-hidden">
               <div className="px-4 py-3 space-y-4 max-w-full">
                 {/* Show Screenshot or Audio Result as main output if validation_type is manual */}
@@ -507,7 +512,7 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                     {/* Show loading state when waiting for solution */}
                     {problemStatementData && !solutionData && (
                       <div className="mt-4 flex">
-                        <p className="text-xs bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent animate-pulse">
+                        <p className="text-xs bg-gradient-to-r from-white/40 via-white/60 to-white/40 bg-clip-text text-transparent animate-pulse">
                           {problemStatementData?.output_format?.subtype === "voice" 
                             ? "Processing voice input..." 
                             : "Generating solutions..."}
@@ -529,7 +534,7 @@ const Solutions: React.FC<SolutionsProps> = ({ setView }) => {
                                       className="flex items-start gap-2"
                                     >
                                       <div className="w-1 h-1 rounded-full bg-blue-400/80 mt-2 shrink-0" />
-                                      <div>{thought}</div>
+                                      <div className="text-white/80">{thought}</div>
                                     </div>
                                   ))}
                                 </div>

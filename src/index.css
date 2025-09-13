@@ -2,22 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Liquid Glass Effect Base */
+/* Updated Liquid Glass Effect - Transparent Black Theme */
 .liquid-glass {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(16px) saturate(180%) brightness(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(120%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.4); /* Changed from white to black with more transparency */
+  backdrop-filter: blur(16px) saturate(150%) brightness(90%); /* Adjusted for darker theme */
+  -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(90%);
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Lighter border for contrast */
   border-radius: 1rem;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    0 8px 32px rgba(0, 0, 0, 0.4), /* Darker shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.1), /* Subtle inner highlight */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05); /* Subtle inner shadow */
   position: relative;
   overflow: hidden;
 }
 
-/* Enhanced liquid glass with shimmer effect */
+/* Enhanced liquid glass with shimmer effect - darker theme */
 .liquid-glass::before {
   content: '';
   position: absolute;
@@ -28,7 +28,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05), /* Much subtler shimmer */
     transparent
   );
   animation: shimmer 3s ease-in-out infinite;
@@ -50,14 +50,14 @@
 /* Fallback for browsers without backdrop-filter support */
 @supports not (backdrop-filter: blur()) {
   .liquid-glass {
-    background: rgba(255, 255, 255, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.6); /* Darker fallback */
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 }
 
 /* Add a subtle outline to ensure visibility */
 .liquid-glass:before {
-  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
   outline-offset: -1px;
 }
 
@@ -89,23 +89,23 @@ button, input, select, textarea, .interactive {
   cursor: pointer;
 }
 
-/* Add visual feedback for draggable area */
+/* Add visual feedback for draggable area - darker theme */
 .draggable-area:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05); /* Much subtler hover */
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
 
-/* Dark theme liquid glass variant */
+/* Dark theme liquid glass variant - more transparent */
 .liquid-glass-dark {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(16px) saturate(180%) brightness(80%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(80%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3); /* Increased transparency */
+  backdrop-filter: blur(16px) saturate(150%) brightness(70%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(70%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure content is not blurred */
@@ -116,31 +116,31 @@ button, input, select, textarea, .interactive {
   -webkit-backdrop-filter: none;
 }
 
-/* Chat container specific styling */
+/* Chat container specific styling - transparent black */
 .liquid-glass.chat-container {
   min-height: auto;
   height: auto;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px) saturate(200%) brightness(110%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%) brightness(110%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.25); /* Very transparent black */
+  backdrop-filter: blur(20px) saturate(130%) brightness(80%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%) brightness(80%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Thin bar variant of liquid glass - for command bar */
+/* Thin bar variant of liquid glass - transparent black */
 .liquid-glass-bar {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(16px) saturate(180%) brightness(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%) brightness(120%);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.4); /* Transparent black */
+  backdrop-filter: blur(16px) saturate(150%) brightness(90%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(90%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 1rem;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
   height: 32px !important;
@@ -148,7 +148,7 @@ button, input, select, textarea, .interactive {
   max-height: 32px !important;
 }
 
-/* Shimmer effect for bar variant */
+/* Shimmer effect for bar variant - darker theme */
 .liquid-glass-bar::before {
   content: '';
   position: absolute;
@@ -159,9 +159,69 @@ button, input, select, textarea, .interactive {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05),
     transparent
   );
   animation: shimmer 3s ease-in-out infinite;
   pointer-events: none;
+}
+
+/* Chat message styling - transparent */
+.chat-message-user {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.chat-message-assistant {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Chat input styling - transparent */
+.chat-input {
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.chat-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Chat container background - more transparent */
+.chat-background {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Code block styling for chat - transparent dark theme */
+.chat-code-block {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.chat-code-header {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(5px) !important;
+  -webkit-backdrop-filter: blur(5px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Main content background - more transparent */
+.main-content-bg {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
 }

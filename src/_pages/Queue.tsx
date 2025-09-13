@@ -9,18 +9,29 @@ import {
   ToastMessage
 } from "../components/ui/toast"
 import QueueCommands from "../components/Queue/QueueCommands"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 interface QueueProps {
   setView: React.Dispatch<React.SetStateAction<"queue" | "solutions" | "debug">>
 }
 
-// Enhanced markdown parser with better code block handling
+// Enhanced markdown parser with better code block handling and copy functionality
 const parseMarkdown = (text: string): JSX.Element => {
   const lines = text.split('\n');
   const elements: JSX.Element[] = [];
   let currentCodeBlock: string[] = [];
   let inCodeBlock = false;
   let codeLanguage = '';
+  
+  // Function to copy code to clipboard
+  const copyToClipboard = (code: string) => {
+    navigator.clipboard.writeText(code).then(() => {
+      // You could add a toast notification here if needed
+    }).catch(err => {
+      console.error('Failed to copy code:', err);
+    });
+  };
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -35,25 +46,36 @@ const parseMarkdown = (text: string): JSX.Element => {
       } else {
         // Ending a code block
         inCodeBlock = false;
+        const codeContent = currentCodeBlock.join('\n');
         elements.push(
-          <div key={`code-${i}`} className="my-3 relative group">
-            <div className="flex justify-between items-center bg-gray-800 px-3 py-2 rounded-t-lg">
-              <span className="text-xs text-gray-300 font-mono">{codeLanguage}</span>
+          <div key={`code-${i}`} className="my-3 relative group chat-code-block rounded-lg overflow-hidden">
+            <div className="flex justify-between items-center chat-code-header px-3 py-2">
+              <span className="text-xs text-white/70 font-mono">{codeLanguage}</span>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(currentCodeBlock.join('\n'));
-                }}
-                className="text-xs text-gray-400 hover:text-white transition-colors"
+                onClick={() => copyToClipboard(codeContent)}
+                className="text-xs text-white/60 hover:text-white/90 transition-colors bg-white/10 hover:bg-white/20 px-2 py-1 rounded"
                 title="Copy code"
               >
-                Copy
+                📋 Copy
               </button>
             </div>
-            <pre className="bg-gray-900 p-3 rounded-b-lg overflow-x-auto text-sm">
-              <code className={`language-${codeLanguage}`}>
-                {currentCodeBlock.join('\n')}
-              </code>
-            </pre>
+            <div className="overflow-x-auto">
+              <SyntaxHighlighter
+                language={codeLanguage}
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  padding: '12px',
+                  background: 'rgba(0, 0, 0, 0.6)',
+                  fontSize: '11px',
+                  lineHeight: '1.4'
+                }}
+                wrapLongLines={true}
+                showLineNumbers={false}
+              >
+                {codeContent}
+              </SyntaxHighlighter>
+            </div>
           </div>
         );
         currentCodeBlock = [];
@@ -74,13 +96,23 @@ const parseMarkdown = (text: string): JSX.Element => {
       let remaining = text;
       let keyCounter = 0;
       
-      // Handle inline code (backticks)
+      // Handle inline code (backticks) with copy functionality
       remaining = remaining.replace(/`([^`]+)`/g, (match, code) => {
         const placeholder = `__INLINE_CODE_${keyCounter}__`;
         parts.push(
-          <code key={`inline-code-${keyCounter++}`} className="bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">
-            {code}
-          </code>
+          <span key={`inline-code-${keyCounter++}`} className="relative group inline-block">
+            <code className="bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded text-xs font-mono text-white/90 border border-white/10">
+              {code}
+            </code>
+            <button
+              onClick={() => copyToClipboard(code)}
+              className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 hover:bg-black/90 text-white/80 p-0.5 rounded text-xs leading-none"
+              title="Copy code"
+              style={{ fontSize: '8px' }}
+            >
+              📋
+            </button>
+          </span>
         );
         return placeholder;
       });
@@ -88,14 +120,14 @@ const parseMarkdown = (text: string): JSX.Element => {
       // Handle bold text
       remaining = remaining.replace(/\*\*(.*?)\*\*/g, (match, content) => {
         const placeholder = `__BOLD_${keyCounter}__`;
-        parts.push(<strong key={`bold-${keyCounter++}`}>{content}</strong>);
+        parts.push(<strong key={`bold-${keyCounter++}`} className="text-white/95">{content}</strong>);
         return placeholder;
       });
       
       // Handle italic text
       remaining = remaining.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, (match, content) => {
         const placeholder = `__ITALIC_${keyCounter}__`;
-        parts.push(<em key={`italic-${keyCounter++}`}>{content}</em>);
+        parts.push(<em key={`italic-${keyCounter++}`} className="text-white/90">{content}</em>);
         return placeholder;
       });
       
@@ -126,8 +158,8 @@ const parseMarkdown = (text: string): JSX.Element => {
       const bulletContent = line.trim().substring(2);
       elements.push(
         <div key={`bullet-${i}`} className="flex items-start gap-2 my-1">
-          <span className="text-gray-400 mt-0.5">•</span>
-          <span>{processInlineElements(bulletContent)}</span>
+          <span className="text-white/60 mt-0.5">•</span>
+          <span className="text-white/85">{processInlineElements(bulletContent)}</span>
         </div>
       );
       continue;
@@ -138,8 +170,8 @@ const parseMarkdown = (text: string): JSX.Element => {
     if (numberedMatch) {
       elements.push(
         <div key={`numbered-${i}`} className="flex items-start gap-2 my-1">
-          <span className="text-gray-400 mt-0.5">{numberedMatch[1]}.</span>
-          <span>{processInlineElements(numberedMatch[2])}</span>
+          <span className="text-white/60 mt-0.5">{numberedMatch[1]}.</span>
+          <span className="text-white/85">{processInlineElements(numberedMatch[2])}</span>
         </div>
       );
       continue;
@@ -148,7 +180,7 @@ const parseMarkdown = (text: string): JSX.Element => {
     // Handle headers
     if (line.startsWith('# ')) {
       elements.push(
-        <h1 key={`h1-${i}`} className="text-base font-bold my-2">
+        <h1 key={`h1-${i}`} className="text-base font-bold my-2 text-white/95">
           {processInlineElements(line.substring(2))}
         </h1>
       );
@@ -157,7 +189,7 @@ const parseMarkdown = (text: string): JSX.Element => {
     
     if (line.startsWith('## ')) {
       elements.push(
-        <h2 key={`h2-${i}`} className="text-sm font-semibold my-2">
+        <h2 key={`h2-${i}`} className="text-sm font-semibold my-2 text-white/90">
           {processInlineElements(line.substring(3))}
         </h2>
       );
@@ -166,7 +198,7 @@ const parseMarkdown = (text: string): JSX.Element => {
     
     if (line.startsWith('### ')) {
       elements.push(
-        <h3 key={`h3-${i}`} className="text-sm font-medium my-1">
+        <h3 key={`h3-${i}`} className="text-sm font-medium my-1 text-white/85">
           {processInlineElements(line.substring(4))}
         </h3>
       );
@@ -175,7 +207,7 @@ const parseMarkdown = (text: string): JSX.Element => {
     
     // Regular paragraph
     elements.push(
-      <p key={`p-${i}`} className="my-1">
+      <p key={`p-${i}`} className="my-1 text-white/80">
         {processInlineElements(line)}
       </p>
     );
@@ -183,25 +215,36 @@ const parseMarkdown = (text: string): JSX.Element => {
   
   // Handle unclosed code block
   if (inCodeBlock && currentCodeBlock.length > 0) {
+    const codeContent = currentCodeBlock.join('\n');
     elements.push(
-      <div key="unclosed-code" className="my-3 relative group">
-        <div className="flex justify-between items-center bg-gray-800 px-3 py-2 rounded-t-lg">
-          <span className="text-xs text-gray-300 font-mono">{codeLanguage}</span>
+      <div key="unclosed-code" className="my-3 relative group chat-code-block rounded-lg overflow-hidden">
+        <div className="flex justify-between items-center chat-code-header px-3 py-2">
+          <span className="text-xs text-white/70 font-mono">{codeLanguage}</span>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(currentCodeBlock.join('\n'));
-            }}
-            className="text-xs text-gray-400 hover:text-white transition-colors"
+            onClick={() => copyToClipboard(codeContent)}
+            className="text-xs text-white/60 hover:text-white/90 transition-colors bg-white/10 hover:bg-white/20 px-2 py-1 rounded"
             title="Copy code"
           >
-            Copy
+            📋 Copy
           </button>
         </div>
-        <pre className="bg-gray-900 p-3 rounded-b-lg overflow-x-auto text-sm">
-          <code className={`language-${codeLanguage}`}>
-            {currentCodeBlock.join('\n')}
-          </code>
-        </pre>
+        <div className="overflow-x-auto">
+          <SyntaxHighlighter
+            language={codeLanguage}
+            style={vscDarkPlus}
+            customStyle={{
+              margin: 0,
+              padding: '12px',
+              background: 'rgba(0, 0, 0, 0.6)',
+              fontSize: '11px',
+              lineHeight: '1.4'
+            }}
+            wrapLongLines={true}
+            showLineNumbers={false}
+          >
+            {codeContent}
+          </SyntaxHighlighter>
+        </div>
       </div>
     );
   }
@@ -462,18 +505,18 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
               onChatToggle={handleChatToggle}
             />
           </div>
-          {/* Enhanced Chat Interface */}
+          {/* Enhanced Chat Interface with Transparent Theme */}
           {isChatOpen && (
             <div className="mt-4 w-full mx-auto liquid-glass chat-container p-4 flex flex-col">
               <div 
                 ref={chatContainerRef}
-                className="flex-1 overflow-y-auto mb-3 p-3 rounded-lg bg-white/10 backdrop-blur-md max-h-64 min-h-[120px] glass-content border border-white/20 shadow-lg"
+                className="flex-1 overflow-y-auto mb-3 p-3 rounded-lg chat-background max-h-64 min-h-[120px] glass-content shadow-lg"
               >
                 {chatMessages.length === 0 ? (
-                  <div className="text-sm text-gray-600 text-center mt-8">
+                  <div className="text-sm text-white/60 text-center mt-8">
                     💬 Chat with Gemini 2.5 Flash
                     <br />
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-white/40">
                       Take a screenshot (Cmd+H) for automatic analysis
                       <br />
                       Conversation history is maintained for follow-up questions
@@ -488,15 +531,15 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                       <div
                         className={`max-w-[80%] px-3 py-1.5 rounded-xl text-xs shadow-md backdrop-blur-sm border relative ${
                           msg.role === "user" 
-                            ? "bg-gray-700/80 text-gray-100 ml-12 border-gray-600/40" 
-                            : "bg-white/85 text-gray-700 mr-12 border-gray-200/50"
+                            ? "chat-message-user ml-12" 
+                            : "chat-message-assistant mr-12"
                         }`}
                         style={{ wordBreak: "break-word", lineHeight: "1.4" }}
                       >
                         {/* Copy button for each message */}
                         <button
                           onClick={() => copyMessageText(msg.text)}
-                          className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-600 hover:bg-gray-700 text-white p-1 rounded-full text-xs"
+                          className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 hover:bg-black/90 text-white/80 p-1 rounded-full text-xs"
                           title="Copy message"
                         >
                           📋
@@ -505,7 +548,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                         {msg.role === "gemini" ? (
                           <div className="select-text">{parseMarkdown(msg.text)}</div>
                         ) : (
-                          <div className="select-text">{msg.text}</div>
+                          <div className="select-text text-white/90">{msg.text}</div>
                         )}
                       </div>
                     </div>
@@ -513,12 +556,12 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                 )}
                 {chatLoading && (
                   <div className="flex justify-start mb-3">
-                    <div className="bg-white/85 text-gray-600 px-3 py-1.5 rounded-xl text-xs backdrop-blur-sm border border-gray-200/50 shadow-md mr-12">
+                    <div className="chat-message-assistant px-3 py-1.5 rounded-xl text-xs backdrop-blur-sm border shadow-md mr-12">
                       <span className="inline-flex items-center">
-                        <span className="animate-pulse text-gray-400">●</span>
-                        <span className="animate-pulse animation-delay-200 text-gray-400">●</span>
-                        <span className="animate-pulse animation-delay-400 text-gray-400">●</span>
-                        <span className="ml-2">Gemini is thinking...</span>
+                        <span className="animate-pulse text-white/40">●</span>
+                        <span className="animate-pulse animation-delay-200 text-white/40">●</span>
+                        <span className="animate-pulse animation-delay-400 text-white/40">●</span>
+                        <span className="ml-2 text-white/70">Gemini is thinking...</span>
                       </span>
                     </div>
                   </div>
@@ -533,7 +576,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
               >
                 <input
                   ref={chatInputRef}
-                  className="flex-1 rounded-lg px-3 py-2 bg-white/25 backdrop-blur-md text-gray-800 placeholder-gray-500 text-xs focus:outline-none focus:ring-1 focus:ring-gray-400/60 border border-white/40 shadow-lg transition-all duration-200 select-text"
+                  className="flex-1 rounded-lg px-3 py-2 chat-input text-xs focus:outline-none focus:ring-1 focus:ring-white/30 shadow-lg transition-all duration-200 select-text"
                   placeholder="Type your message... (conversation history is maintained)"
                   value={chatInput}
                   onChange={e => setChatInput(e.target.value)}
@@ -541,7 +584,7 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
                 />
                 <button
                   type="submit"
-                  className="p-2 rounded-lg bg-gray-600/80 hover:bg-gray-700/80 border border-gray-500/60 flex items-center justify-center transition-all duration-200 backdrop-blur-sm shadow-lg disabled:opacity-50"
+                  className="p-2 rounded-lg bg-black/60 hover:bg-black/80 border border-white/20 flex items-center justify-center transition-all duration-200 backdrop-blur-sm shadow-lg disabled:opacity-50"
                   disabled={chatLoading || !chatInput.trim()}
                   tabIndex={-1}
                   aria-label="Send"
@@ -553,14 +596,14 @@ const Queue: React.FC<QueueProps> = ({ setView }) => {
               </form>
               
               {/* Chat Controls */}
-              <div className="mt-2 flex justify-between items-center text-xs text-gray-500">
+              <div className="mt-2 flex justify-between items-center text-xs text-white/50">
                 <span>{chatMessages.length} messages</span>
                 <button
                   onClick={() => {
                     setChatMessages([])
                     showToast("Chat Cleared", "Conversation history cleared", "neutral")
                   }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-white/40 hover:text-white/70 transition-colors"
                 >
                   Clear Chat
                 </button>
