@@ -1,5 +1,6 @@
-import { globalShortcut, app } from "electron"
-import { AppState } from "./main" // Adjust the import path if necessary
+// electron/shortcuts.ts - Updated with typing shortcuts
+import { globalShortcut, app, dialog } from "electron"
+import { AppState } from "./main"
 
 export class ShortcutsHelper {
   private appState: AppState
@@ -15,6 +16,7 @@ export class ShortcutsHelper {
       this.appState.centerAndShowWindow()
     })
 
+    // Screenshot shortcut
     globalShortcut.register("CommandOrControl+H", async () => {
       const mainWindow = this.appState.getMainWindow()
       if (mainWindow) {
@@ -32,14 +34,142 @@ export class ShortcutsHelper {
       }
     })
 
+    // Process screenshots shortcut
     globalShortcut.register("CommandOrControl+Enter", async () => {
       await this.appState.processingHelper.processScreenshots()
     })
 
+    // **NEW: Type last response shortcut**
+    // globalShortcut.register("CommandOrControl+]", async () => {
+    //   console.log("Ctrl/Cmd + ] pressed - typing last response...")
+      
+    //   const lastResponse = this.appState.getLastResponse()
+    //   if (!lastResponse) {
+    //     const mainWindow = this.appState.getMainWindow()
+    //     if (mainWindow) {
+    //       dialog.showMessageBoxSync(mainWindow, {
+    //         type: "info",
+    //         message: "No response available to type. Generate a solution first."
+    //       })
+    //     }
+    //     return
+    //   }
+
+    //   const mainWindow = this.appState.getMainWindow()
+    //   try {
+    //     // Optional confirmation dialog (remove if you want instant typing)
+    //     if (mainWindow) {
+    //       const confirmed = dialog.showMessageBoxSync(mainWindow, {
+    //         type: "question",
+    //         buttons: ["Yes, type it", "Cancel"],
+    //         defaultId: 0,
+    //         cancelId: 1,
+    //         message: "Type the last response into the currently focused window?",
+    //         detail: "Make sure to focus the target application first."
+    //       }) === 0
+
+    //       if (!confirmed) {
+    //         console.log("Typing cancelled by user")
+    //         return
+    //       }
+    //     }
+
+    //     await this.appState.typingHelper.typeStoredResponse(lastResponse)
+    //   } catch (error) {
+    //     console.error("Error typing response:", error)
+    //     if (mainWindow) {
+    //       dialog.showErrorBox("Typing Error", `Failed to type response: ${error}`)
+    //     }
+    //   }
+    // })
+
+
+
+    // In your electron/shortcuts.ts, make sure you have this shortcut:
+
+globalShortcut.register("CommandOrControl+]", async () => {
+  console.log("[DEBUG] Ctrl/Cmd + ] pressed - typing last response...")
+  
+  const lastResponse = this.appState.getLastResponse()
+  console.log("[DEBUG] Current lastResponse:", lastResponse)
+  
+  if (!lastResponse) {
+    const mainWindow = this.appState.getMainWindow()
+    if (mainWindow) {
+      console.log("[DEBUG] No response available, showing dialog")
+      dialog.showMessageBoxSync(mainWindow, {
+        type: "info",
+        message: "No response available to type. Generate a solution first."
+      })
+    }
+    return
+  }
+
+  try {
+    console.log("[DEBUG] Starting to type response...")
+    await this.appState.typingHelper.typeStoredResponse(lastResponse)
+    console.log("[DEBUG] Typing completed successfully")
+  } catch (error) {
+    console.error("[DEBUG] Error typing response:", error)
+    const mainWindow = this.appState.getMainWindow()
+    if (mainWindow) {
+      dialog.showErrorBox("Typing Error", `Failed to type response: ${error}`)
+    }
+  }
+})
+
+    // **NEW: Type current solution shortcut**
+    globalShortcut.register("CommandOrControl+Shift+]", async () => {
+      console.log("Ctrl/Cmd + Shift + ] pressed - typing current solution...")
+      
+      try {
+        const mainWindow = this.appState.getMainWindow()
+        
+        // Check if we have problem info
+        const problemInfo = this.appState.getProblemInfo()
+        if (!problemInfo) {
+          if (mainWindow) {
+            dialog.showMessageBoxSync(mainWindow, {
+              type: "info",
+              message: "No solution available. Take screenshots and generate a solution first."
+            })
+          }
+          return
+        }
+
+        // Optional confirmation dialog
+        if (mainWindow) {
+          const confirmed = dialog.showMessageBoxSync(mainWindow, {
+            type: "question",
+            buttons: ["Yes, type solution", "Cancel"],
+            defaultId: 0,
+            cancelId: 1,
+            message: "Type the current solution code into the focused window?",
+            detail: "Make sure to focus your code editor first."
+          }) === 0
+
+          if (!confirmed) {
+            console.log("Solution typing cancelled by user")
+            return
+          }
+        }
+
+        await this.appState.typingHelper.typeCurrentSolution()
+      } catch (error) {
+        console.error("Error typing solution:", error)
+        const mainWindow = this.appState.getMainWindow()
+        if (mainWindow) {
+          dialog.showErrorBox("Typing Error", `Failed to type solution: ${error}`)
+        }
+      }
+    })
+
+    // Reset shortcut
     globalShortcut.register("CommandOrControl+R", () => {
-      console.log(
-        "Command + R pressed. Canceling requests and resetting queues..."
-      )
+      console.log("Command + R pressed. Canceling requests and resetting queues...")
+
+      // Cancel ongoing typing
+      this.appState.typingHelper.cancelTyping()
 
       // Cancel ongoing API requests
       this.appState.processingHelper.cancelOngoingRequests()
@@ -59,7 +189,7 @@ export class ShortcutsHelper {
       }
     })
 
-    // New shortcuts for moving the window
+    // Window movement shortcuts
     globalShortcut.register("CommandOrControl+Left", () => {
       console.log("Command/Ctrl + Left pressed. Moving window left.")
       this.appState.moveWindowLeft()
@@ -69,24 +199,24 @@ export class ShortcutsHelper {
       console.log("Command/Ctrl + Right pressed. Moving window right.")
       this.appState.moveWindowRight()
     })
+
     globalShortcut.register("CommandOrControl+Down", () => {
       console.log("Command/Ctrl + down pressed. Moving window down.")
       this.appState.moveWindowDown()
     })
+
     globalShortcut.register("CommandOrControl+Up", () => {
       console.log("Command/Ctrl + Up pressed. Moving window Up.")
       this.appState.moveWindowUp()
     })
 
+    // Toggle window shortcut
     globalShortcut.register("CommandOrControl+B", () => {
       this.appState.toggleMainWindow()
-      // If window exists and we're showing it, bring it to front
       const mainWindow = this.appState.getMainWindow()
       if (mainWindow && !this.appState.isVisible()) {
-        // Force the window to the front on macOS
         if (process.platform === "darwin") {
           mainWindow.setAlwaysOnTop(true, "normal")
-          // Reset alwaysOnTop after a brief delay
           setTimeout(() => {
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.setAlwaysOnTop(true, "floating")
@@ -100,5 +230,7 @@ export class ShortcutsHelper {
     app.on("will-quit", () => {
       globalShortcut.unregisterAll()
     })
+
+    console.log("All shortcuts registered successfully")
   }
 }

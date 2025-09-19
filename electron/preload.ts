@@ -22,7 +22,6 @@ interface ElectronAPI {
   onProcessingNoScreenshots: (callback: () => void) => () => void
   onProblemExtracted: (callback: (data: any) => void) => () => void
   onSolutionSuccess: (callback: (data: any) => void) => () => void
-
   onUnauthorized: (callback: () => void) => () => void
   onDebugError: (callback: (error: string) => void) => () => void
   takeScreenshot: () => Promise<void>
@@ -35,6 +34,20 @@ interface ElectronAPI {
   analyzeImageFile: (path: string) => Promise<void>
   quitApp: () => Promise<void>
   invoke: (channel: string, ...args: any[]) => Promise<any>
+  
+  // NEW: Typing functionality
+  typeText: (text: string, countdownSeconds?: number) => Promise<{ success: boolean; error?: string }>
+  typeLastResponse: (countdownSeconds?: number) => Promise<{ success: boolean; error?: string }>
+  typeCurrentSolution: (countdownSeconds?: number) => Promise<{ success: boolean; error?: string }>
+  cancelTyping: () => Promise<{ success: boolean; error?: string }>
+  isTyping: () => Promise<{ isTyping: boolean }>
+  getLastResponse: () => Promise<{ response: string | null }>
+  
+  // NEW: Typing event listeners
+  onTypingCountdown: (callback: (seconds: number) => void) => () => void
+  onTypingStarted: (callback: () => void) => () => void
+  onTypingFinished: (callback: () => void) => () => void
+  onTypingCancelled: (callback: () => void) => () => void
 }
 
 export const PROCESSING_EVENTS = {
@@ -171,5 +184,49 @@ contextBridge.exposeInMainWorld("electronAPI", {
   analyzeAudioFile: (path: string) => ipcRenderer.invoke("analyze-audio-file", path),
   analyzeImageFile: (path: string) => ipcRenderer.invoke("analyze-image-file", path),
   quitApp: () => ipcRenderer.invoke("quit-app"),
-  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args)
+  invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
+
+  // NEW: Typing functionality IPC calls
+  typeText: (text: string, countdownSeconds?: number) => 
+    ipcRenderer.invoke("type-text", text, countdownSeconds),
+  typeLastResponse: (countdownSeconds?: number) => 
+    ipcRenderer.invoke("type-last-response", countdownSeconds),
+  typeCurrentSolution: (countdownSeconds?: number) => 
+    ipcRenderer.invoke("type-current-solution", countdownSeconds),
+  cancelTyping: () => 
+    ipcRenderer.invoke("cancel-typing"),
+  isTyping: () => 
+    ipcRenderer.invoke("is-typing"),
+  getLastResponse: () => 
+    ipcRenderer.invoke("get-last-response"),
+
+  // NEW: Typing event listeners
+  onTypingCountdown: (callback: (seconds: number) => void) => {
+    const subscription = (_: any, seconds: number) => callback(seconds)
+    ipcRenderer.on("typing-countdown", subscription)
+    return () => {
+      ipcRenderer.removeListener("typing-countdown", subscription)
+    }
+  },
+  onTypingStarted: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("typing-started", subscription)
+    return () => {
+      ipcRenderer.removeListener("typing-started", subscription)
+    }
+  },
+  onTypingFinished: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("typing-finished", subscription)
+    return () => {
+      ipcRenderer.removeListener("typing-finished", subscription)
+    }
+  },
+  onTypingCancelled: (callback: () => void) => {
+    const subscription = () => callback()
+    ipcRenderer.on("typing-cancelled", subscription)
+    return () => {
+      ipcRenderer.removeListener("typing-cancelled", subscription)
+    }
+  }
 } as ElectronAPI)

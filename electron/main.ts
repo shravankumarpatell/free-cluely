@@ -1,9 +1,11 @@
+// electron/main.ts - Updated with TypingHelper
 import { app, BrowserWindow, Tray, Menu, nativeImage } from "electron"
 import { initializeIpcHandlers } from "./ipcHandlers"
 import { WindowHelper } from "./WindowHelper"
 import { ScreenshotHelper } from "./ScreenshotHelper"
 import { ShortcutsHelper } from "./shortcuts"
 import { ProcessingHelper } from "./ProcessingHelper"
+import { TypingHelper } from "./TypingHelper"
 
 export class AppState {
   private static instance: AppState | null = null
@@ -12,6 +14,7 @@ export class AppState {
   private screenshotHelper: ScreenshotHelper
   public shortcutsHelper: ShortcutsHelper
   public processingHelper: ProcessingHelper
+  public typingHelper: TypingHelper // Add TypingHelper
   private tray: Tray | null = null
 
   // View management
@@ -23,9 +26,12 @@ export class AppState {
     output_format: Record<string, any>
     constraints: Array<Record<string, any>>
     test_cases: Array<Record<string, any>>
-  } | null = null // Allow null
+  } | null = null
 
   private hasDebugged: boolean = false
+
+  // Store last response for typing
+  private lastResponse: string | null = null
 
   // Processing events
   public readonly PROCESSING_EVENTS = {
@@ -55,6 +61,9 @@ export class AppState {
     // Initialize ProcessingHelper
     this.processingHelper = new ProcessingHelper(this)
 
+    // Initialize TypingHelper
+    this.typingHelper = new TypingHelper(this)
+
     // Initialize ShortcutsHelper
     this.shortcutsHelper = new ShortcutsHelper(this)
   }
@@ -66,7 +75,7 @@ export class AppState {
     return AppState.instance
   }
 
-  // Getters and Setters
+  // Existing getters and setters...
   public getMainWindow(): BrowserWindow | null {
     return this.windowHelper.getMainWindow()
   }
@@ -104,7 +113,16 @@ export class AppState {
     return this.screenshotHelper.getExtraScreenshotQueue()
   }
 
-  // Window management methods
+  // Add methods for storing and retrieving last response
+  public setLastResponse(response: string): void {
+    this.lastResponse = response
+  }
+
+  public getLastResponse(): string | null {
+    return this.lastResponse
+  }
+
+  // Existing window management methods...
   public createWindow(): void {
     this.windowHelper.createWindow()
   }
@@ -133,15 +151,12 @@ export class AppState {
 
   public clearQueues(): void {
     this.screenshotHelper.clearQueues()
-
-    // Clear problem info
     this.problemInfo = null
-
-    // Reset view to initial state
+    this.lastResponse = null // Clear last response
     this.setView("queue")
   }
 
-  // Screenshot management methods
+  // Existing screenshot management methods...
   public async takeScreenshot(): Promise<string> {
     if (!this.getMainWindow()) throw new Error("No main window available")
 
@@ -163,7 +178,7 @@ export class AppState {
     return this.screenshotHelper.deleteScreenshot(path)
   }
 
-  // New methods to move the window
+  // Existing window movement methods...
   public moveWindowLeft(): void {
     this.windowHelper.moveWindowLeft()
   }
@@ -183,13 +198,10 @@ export class AppState {
   }
 
   public createTray(): void {
-    // Create a simple tray icon
     const image = nativeImage.createEmpty()
     
-    // Try to use a system template image for better integration
     let trayImage = image
     try {
-      // Create a minimal icon - just use an empty image and set the title
       trayImage = nativeImage.createFromBuffer(Buffer.alloc(0))
     } catch (error) {
       console.log("Using empty tray image")
@@ -233,6 +245,19 @@ export class AppState {
         }
       },
       {
+        label: 'Type Last Response (Cmd+])',
+        click: async () => {
+          try {
+            const lastResponse = this.getLastResponse()
+            if (lastResponse) {
+              await this.typingHelper.typeStoredResponse(lastResponse)
+            }
+          } catch (error) {
+            console.error("Error typing from tray:", error)
+          }
+        }
+      },
+      {
         type: 'separator'
       },
       {
@@ -247,12 +272,10 @@ export class AppState {
     this.tray.setToolTip('Interview Coder - Press Cmd+Shift+Space to show')
     this.tray.setContextMenu(contextMenu)
     
-    // Set a title for macOS (will appear in menu bar)
     if (process.platform === 'darwin') {
       this.tray.setTitle('IC')
     }
     
-    // Double-click to show window
     this.tray.on('double-click', () => {
       this.centerAndShowWindow()
     })
@@ -267,18 +290,16 @@ export class AppState {
   }
 }
 
-// Application initialization
+// Application initialization remains the same...
 async function initializeApp() {
   const appState = AppState.getInstance()
 
-  // Initialize IPC handlers before window creation
   initializeIpcHandlers(appState)
 
   app.whenReady().then(() => {
     console.log("App is ready")
     appState.createWindow()
     appState.createTray()
-    // Register global shortcuts using ShortcutsHelper
     appState.shortcutsHelper.registerGlobalShortcuts()
   })
 
@@ -289,16 +310,14 @@ async function initializeApp() {
     }
   })
 
-  // Quit when all windows are closed, except on macOS
   app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
       app.quit()
     }
   })
 
-  app.dock?.hide() // Hide dock icon (optional)
+  app.dock?.hide()
   app.commandLine.appendSwitch("disable-background-timer-throttling")
 }
 
-// Start the application
 initializeApp().catch(console.error)
